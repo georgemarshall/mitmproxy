@@ -12,12 +12,15 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import sys, os, string, socket, time
-import shutil, tempfile, threading
-import SocketServer
-from OpenSSL import SSL
-from netlib import odict, tcp, http, wsgi, certutils, http_status
-import utils, flow, version, platform, controller
+import os
+import socket
+import threading
+from netlib import tcp, http, wsgi, certutils, http_status
+import utils
+import flow
+import version
+import platform
+import controller
 import authentication
 
 
@@ -26,7 +29,7 @@ class ProxyError(Exception):
         self.code, self.msg, self.headers = code, msg, headers
 
     def __str__(self):
-        return "ProxyError(%s, %s)"%(self.code, self.msg)
+        return "ProxyError(%s, %s)" % (self.code, self.msg)
 
 
 class Log(controller.Msg):
@@ -36,7 +39,7 @@ class Log(controller.Msg):
 
 
 class ProxyConfig:
-    def __init__(self, certfile = None, cacert = None, clientcerts = None, no_upstream_cert=False, body_size_limit = None, reverse_proxy=None, transparent_proxy=None, certdir = None, authenticator=None):
+    def __init__(self, certfile=None, cacert=None, clientcerts=None, no_upstream_cert=False, body_size_limit=None, reverse_proxy=None, transparent_proxy=None, certdir=None, authenticator=None):
         assert not (reverse_proxy and transparent_proxy)
         self.certfile = certfile
         self.cacert = cacert
@@ -129,7 +132,7 @@ class ProxyHandler(tcp.BaseHandler):
         self.log(
             cc, "disconnect",
             [
-                "handled %s requests"%cc.requestcount]
+                "handled %s requests" % cc.requestcount]
         )
         cd._send(self.mqueue)
 
@@ -201,7 +204,7 @@ class ProxyHandler(tcp.BaseHandler):
                     return
         except (IOError, ProxyError, http.HttpError, tcp.NetLibDisconnect), e:
             if hasattr(e, "code"):
-                cc.error = "%s: %s"%(e.code, e.msg)
+                cc.error = "%s: %s" % (e.code, e.msg)
             else:
                 cc.error = str(e)
 
@@ -210,7 +213,7 @@ class ProxyHandler(tcp.BaseHandler):
                 err._send(self.mqueue)
                 self.log(
                     cc, cc.error,
-                    ["url: %s"%request.get_url()]
+                    ["url: %s" % request.get_url()]
                 )
             else:
                 self.log(cc, cc.error)
@@ -222,10 +225,10 @@ class ProxyHandler(tcp.BaseHandler):
 
     def log(self, cc, msg, subs=()):
         msg = [
-            "%s:%s: "%cc.address + msg
+            "%s:%s: " % cc.address + msg
         ]
         for i in subs:
-            msg.append("  -> "+i)
+            msg.append("  -> " + i)
         msg = "\n".join(msg)
         l = Log(msg)
         l._send(self.mqueue)
@@ -239,7 +242,7 @@ class ProxyHandler(tcp.BaseHandler):
                 try:
                     cert = certutils.get_remote_cert(host, port, sni)
                 except tcp.NetLibError, v:
-                    raise ProxyError(502, "Unable to get remote cert: %s"%str(v))
+                    raise ProxyError(502, "Unable to get remote cert: %s" % str(v))
                 sans = cert.altnames
                 host = cert.cn.decode("utf8").encode("idna")
             ret = self.config.certstore.get_cert(host, sans, self.config.cacert)
@@ -252,7 +255,7 @@ class ProxyHandler(tcp.BaseHandler):
             Get a line, possibly preceded by a blank.
         """
         line = fp.readline()
-        if line == "\r\n" or line == "\n": # Possible leftover from previous message
+        if line == "\r\n" or line == "\n":  # Possible leftover from previous message
             line = fp.readline()
         return line
 
@@ -281,16 +284,16 @@ class ProxyHandler(tcp.BaseHandler):
             return None
         r = http.parse_init_http(line)
         if not r:
-            raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+            raise ProxyError(400, "Bad HTTP request line: %s" % repr(line))
         method, path, httpversion = r
         headers = self.read_headers(authenticate=False)
         content = http.read_http_body_request(
-                    self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-                )
+            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        )
         return flow.Request(
-                    client_conn,httpversion, host, port, scheme, method, path, headers, content,
-                    self.rfile.first_byte_timestamp, utils.timestamp()
-               )
+            client_conn, httpversion, host, port, scheme, method, path, headers, content,
+            self.rfile.first_byte_timestamp, utils.timestamp()
+        )
 
     def read_request_reverse(self, client_conn):
         line = self.get_line(self.rfile)
@@ -299,18 +302,17 @@ class ProxyHandler(tcp.BaseHandler):
         scheme, host, port = self.config.reverse_proxy
         r = http.parse_init_http(line)
         if not r:
-            raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+            raise ProxyError(400, "Bad HTTP request line: %s" % repr(line))
         method, path, httpversion = r
         headers = self.read_headers(authenticate=False)
         content = http.read_http_body_request(
-                    self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
-                )
+            self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
+        )
         return flow.Request(
-                    client_conn, httpversion, host, port, "http", method, path, headers, content,
-                    self.rfile.first_byte_timestamp, utils.timestamp()
-               )
+            client_conn, httpversion, host, port, "http", method, path, headers, content,
+            self.rfile.first_byte_timestamp, utils.timestamp()
+        )
 
-    
     def read_request_proxy(self, client_conn):
         line = self.get_line(self.rfile)
         if line == "":
@@ -318,16 +320,16 @@ class ProxyHandler(tcp.BaseHandler):
         if http.parse_init_connect(line):
             r = http.parse_init_connect(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+                raise ProxyError(400, "Bad HTTP request line: %s" % repr(line))
             host, port, httpversion = r
 
             headers = self.read_headers(authenticate=True)
 
             self.wfile.write(
-                        'HTTP/1.1 200 Connection established\r\n' +
-                        ('Proxy-agent: %s\r\n'%self.server_version) +
-                        '\r\n'
-                        )
+                'HTTP/1.1 200 Connection established\r\n' +
+                ('Proxy-agent: %s\r\n' % self.server_version) +
+                '\r\n'
+            )
             self.wfile.flush()
             certfile = self.find_cert(host, port, None)
             try:
@@ -340,7 +342,7 @@ class ProxyHandler(tcp.BaseHandler):
         if self.proxy_connect_state:
             r = http.parse_init_http(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+                raise ProxyError(400, "Bad HTTP request line: %s" % repr(line))
             method, path, httpversion = r
             headers = self.read_headers(authenticate=False)
 
@@ -349,22 +351,22 @@ class ProxyHandler(tcp.BaseHandler):
                 self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
             )
             return flow.Request(
-                        client_conn, httpversion, host, port, "https", method, path, headers, content,
-                        self.rfile.first_byte_timestamp, utils.timestamp()
-                   )
+                client_conn, httpversion, host, port, "https", method, path, headers, content,
+                self.rfile.first_byte_timestamp, utils.timestamp()
+            )
         else:
             r = http.parse_init_proxy(line)
             if not r:
-                raise ProxyError(400, "Bad HTTP request line: %s"%repr(line))
+                raise ProxyError(400, "Bad HTTP request line: %s" % repr(line))
             method, scheme, host, port, path, httpversion = r
             headers = self.read_headers(authenticate=True)
             content = http.read_http_body_request(
                 self.rfile, self.wfile, headers, httpversion, self.config.body_size_limit
             )
             return flow.Request(
-                        client_conn, httpversion, host, port, scheme, method, path, headers, content,
-                        self.rfile.first_byte_timestamp, utils.timestamp()
-                    )
+                client_conn, httpversion, host, port, scheme, method, path, headers, content,
+                self.rfile.first_byte_timestamp, utils.timestamp()
+            )
 
     def read_request(self, client_conn):
         self.rfile.reset_timestamps()
@@ -384,10 +386,10 @@ class ProxyHandler(tcp.BaseHandler):
                 self.config.authenticator.clean(headers)
             else:
                 raise ProxyError(
-                            407,
-                            "Proxy Authentication Required",
-                            self.config.authenticator.auth_challenge_headers()
-                       )
+                    407,
+                    "Proxy Authentication Required",
+                    self.config.authenticator.auth_challenge_headers()
+                )
         return headers
 
     def send_response(self, response):
@@ -400,13 +402,13 @@ class ProxyHandler(tcp.BaseHandler):
     def send_error(self, code, body, headers):
         try:
             response = http_status.RESPONSES.get(code, "Unknown")
-            html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>'%(code, response, body)
+            html_content = '<html><head>\n<title>%d %s</title>\n</head>\n<body>\n%s\n</body>\n</html>' % (code, response, body)
             self.wfile.write("HTTP/1.1 %s %s\r\n" % (code, response))
-            self.wfile.write("Server: %s\r\n"%self.server_version)
+            self.wfile.write("Server: %s\r\n" % self.server_version)
             self.wfile.write("Content-type: text/html\r\n")
-            self.wfile.write("Content-Length: %d\r\n"%len(html_content))
+            self.wfile.write("Content-Length: %d\r\n" % len(html_content))
             for key, value in headers.items():
-                self.wfile.write("%s: %s\r\n"%(key, value))
+                self.wfile.write("%s: %s\r\n" % (key, value))
             self.wfile.write("Connection: close\r\n")
             self.wfile.write("\r\n")
             self.wfile.write(html_content)
@@ -415,12 +417,14 @@ class ProxyHandler(tcp.BaseHandler):
             pass
 
 
-class ProxyServerError(Exception): pass
+class ProxyServerError(Exception):
+    pass
 
 
 class ProxyServer(tcp.TCPServer):
     allow_reuse_address = True
     bound = True
+
     def __init__(self, config, port, address='', server_version=version.NAMEVERSION):
         """
             Raises ProxyServerError if there's a startup problem.
@@ -446,7 +450,7 @@ class ProxyServer(tcp.TCPServer):
         h.handle()
         try:
             h.finish()
-        except tcp.NetLibDisconnect, e:
+        except tcp.NetLibDisconnect:
             pass
 
     def handle_shutdown(self):
@@ -477,6 +481,7 @@ class AppRegistry:
 
 class DummyServer:
     bound = False
+
     def __init__(self, config):
         self.config = config
 
@@ -492,28 +497,29 @@ def certificate_option_group(parser):
     group = parser.add_argument_group("SSL")
     group.add_argument(
         "--cert", action="store",
-        type = str, dest="cert", default=None,
-        help = "User-created SSL certificate file."
+        type=str, dest="cert", default=None,
+        help="User-created SSL certificate file."
     )
     group.add_argument(
         "--client-certs", action="store",
-        type = str, dest = "clientcerts", default=None,
-        help = "Client certificate directory."
+        type=str, dest="clientcerts", default=None,
+        help="Client certificate directory."
     )
     group.add_argument(
         "--dummy-certs", action="store",
-        type = str, dest = "certdir", default=None,
-        help = "Generated dummy certs directory."
+        type=str, dest="certdir", default=None,
+        help="Generated dummy certs directory."
     )
 
 
 TRANSPARENT_SSL_PORTS = [443, 8443]
 
+
 def process_proxy_options(parser, options):
     if options.cert:
         options.cert = os.path.expanduser(options.cert)
         if not os.path.exists(options.cert):
-            parser.error("Manually created certificate does not exist: %s"%options.cert)
+            parser.error("Manually created certificate does not exist: %s" % options.cert)
 
     cacert = os.path.join(options.confdir, "mitmproxy-ca.pem")
     cacert = os.path.expanduser(cacert)
@@ -529,29 +535,29 @@ def process_proxy_options(parser, options):
     if options.transparent_proxy:
         if not platform.resolver:
             parser.error("Transparent mode not supported on this platform.")
-        trans = dict(
-            resolver = platform.resolver(),
-            sslports = TRANSPARENT_SSL_PORTS
-        )
+        trans = {
+            'resolver': platform.resolver(),
+            'sslports': TRANSPARENT_SSL_PORTS
+        }
     else:
         trans = None
 
     if options.reverse_proxy:
         rp = utils.parse_proxy_spec(options.reverse_proxy)
         if not rp:
-            parser.error("Invalid reverse proxy specification: %s"%options.reverse_proxy)
+            parser.error("Invalid reverse proxy specification: %s" % options.reverse_proxy)
     else:
         rp = None
 
     if options.clientcerts:
         options.clientcerts = os.path.expanduser(options.clientcerts)
         if not os.path.exists(options.clientcerts) or not os.path.isdir(options.clientcerts):
-            parser.error("Client certificate directory does not exist or is not a directory: %s"%options.clientcerts)
+            parser.error("Client certificate directory does not exist or is not a directory: %s" % options.clientcerts)
 
     if options.certdir:
         options.certdir = os.path.expanduser(options.certdir)
         if not os.path.exists(options.certdir) or not os.path.isdir(options.certdir):
-            parser.error("Dummy cert directory does not exist or is not a directory: %s"%options.certdir)
+            parser.error("Dummy cert directory does not exist or is not a directory: %s" % options.certdir)
 
     if (options.auth_nonanonymous or options.auth_singleuser or options.auth_htpasswd):
         if options.auth_singleuser:
@@ -568,13 +574,13 @@ def process_proxy_options(parser, options):
         authenticator = authentication.NullProxyAuth(None)
 
     return ProxyConfig(
-        certfile = options.cert,
-        cacert = cacert,
-        clientcerts = options.clientcerts,
-        body_size_limit = body_size_limit,
-        no_upstream_cert = options.no_upstream_cert,
-        reverse_proxy = rp,
-        transparent_proxy = trans,
-        certdir = options.certdir,
-        authenticator = authenticator
+        certfile=options.cert,
+        cacert=cacert,
+        clientcerts=options.clientcerts,
+        body_size_limit=body_size_limit,
+        no_upstream_cert=options.no_upstream_cert,
+        reverse_proxy=rp,
+        transparent_proxy=trans,
+        certdir=options.certdir,
+        authenticator=authenticator
     )

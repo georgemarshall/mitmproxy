@@ -13,11 +13,16 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import sys, os
+import sys
+import os
 import netlib.utils
-import flow, filt, utils
+import flow
+import filt
+import utils
 
-class DumpError(Exception): pass
+
+class DumpError(Exception):
+    pass
 
 
 class Options(object):
@@ -42,6 +47,7 @@ class Options(object):
         "verbosity",
         "wfile",
     ]
+
     def __init__(self, **kwargs):
         for k, v in kwargs.items():
             setattr(self, k, v)
@@ -51,7 +57,7 @@ class Options(object):
 
 
 def str_response(resp):
-    r = "%s %s"%(resp.code, resp.msg)
+    r = "%s %s" % (resp.code, resp.msg)
     if resp.is_replay():
         r = "[replay] " + r
     return r
@@ -62,7 +68,7 @@ def str_request(req):
         c = req.client_conn.address[0]
     else:
         c = "[replay]"
-    r = "%s %s %s"%(c, req.method, req.get_url())
+    r = "%s %s %s" % (c, req.method, req.get_url())
     if req.stickycookie:
         r = "[stickycookie] " + r
     return r
@@ -162,7 +168,7 @@ class DumpMaster(flow.FlowMaster):
 
     def indent(self, n, t):
         l = str(t).strip().split("\n")
-        return "\n".join(" "*n + i for i in l)
+        return "\n".join(" " * n + i for i in l)
 
     def _process_flow(self, f):
         if self.filt and not f.match(self.filt):
@@ -171,13 +177,13 @@ class DumpMaster(flow.FlowMaster):
         if f.response:
             sz = utils.pretty_size(len(f.response.content))
             if self.o.verbosity > 0:
-                result = " << %s %s"%(str_response(f.response), sz)
+                result = " << %s %s" % (str_response(f.response), sz)
             if self.o.verbosity > 1:
                 result = result + "\n\n" + self.indent(4, f.response.headers)
             if self.o.verbosity > 2:
                 if utils.isBin(f.response.content):
                     d = netlib.utils.hexdump(f.response.content)
-                    d = "\n".join("%s\t%s %s"%i for i in d)
+                    d = "\n".join("%s\t%s %s" % i for i in d)
                     cont = self.indent(4, d)
                 elif f.response.content:
                     cont = self.indent(4, f.response.content)
@@ -185,7 +191,7 @@ class DumpMaster(flow.FlowMaster):
                     cont = ""
                 result = result + "\n\n" + cont
         elif f.error:
-            result = " << %s"%f.error.msg
+            result = " << %s" % f.error.msg
 
         if self.o.verbosity == 1:
             print >> self.outfile, str_request(f.request)

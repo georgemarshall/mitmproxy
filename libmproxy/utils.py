@@ -12,10 +12,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
-import os, datetime, urlparse, string, urllib, re
-import time, functools, cgi
+import os
+import datetime
+import urllib
+import re
+import time
+import functools
+import cgi
 import json
 from netlib import http
+
 
 def timestamp():
     """
@@ -86,15 +92,15 @@ def del_all(dict, keys):
 
 def pretty_size(size):
     suffixes = [
-        ("B",   2**10),
-        ("kB",   2**20),
-        ("M",   2**30),
+        ("B", 2 ** 10),
+        ("kB", 2 ** 20),
+        ("M", 2 ** 30),
     ]
     for suf, lim in suffixes:
         if size >= lim:
             continue
         else:
-            x = round(size/float(lim/2**10), 2)
+            x = round(size / float(lim / 2 ** 10), 2)
             if x == int(x):
                 x = int(x)
             return str(x) + suf
@@ -115,7 +121,7 @@ class Data:
         """
         fullpath = os.path.join(self.dirname, path)
         if not os.path.exists(fullpath):
-            raise ValueError, "dataPath: %s does not exist."%fullpath
+            raise ValueError("dataPath: %s does not exist." % fullpath)
         return fullpath
 pkg_data = Data(__name__)
 
@@ -132,8 +138,8 @@ class LRUCache:
         self.size = size
 
     def __call__(self, f):
-        cacheName = "_cached_%s"%f.__name__
-        cacheListName = "_cachelist_%s"%f.__name__
+        cacheName = "_cached_%s" % f.__name__
+        cacheListName = "_cachelist_%s" % f.__name__
         size = self.size
 
         @functools.wraps(f)
@@ -143,7 +149,7 @@ class LRUCache:
                 setattr(self, cacheListName, [])
             cache = getattr(self, cacheName)
             cacheList = getattr(self, cacheListName)
-            if cache.has_key(args):
+            if args in cache:
                 cacheList.remove(args)
                 cacheList.insert(0, args)
                 return cache[args]
@@ -199,14 +205,14 @@ def hostport(scheme, host, port):
     if (port, scheme) in [(80, "http"), (443, "https")]:
         return host
     else:
-        return "%s:%s"%(host, port)
+        return "%s:%s" % (host, port)
 
 
 def unparse_url(scheme, host, port, path=""):
     """
         Returns a URL string, constructed from the specified compnents.
     """
-    return "%s://%s%s"%(scheme, hostport(scheme, host, port), path)
+    return "%s://%s%s" % (scheme, hostport(scheme, host, port), path)
 
 
 def clean_hanging_newline(t):
@@ -234,11 +240,11 @@ def parse_size(s):
         return None
     mult = None
     if s[-1].lower() == "k":
-        mult = 1024**1
+        mult = 1024 ** 1
     elif s[-1].lower() == "m":
-        mult = 1024**2
+        mult = 1024 ** 2
     elif s[-1].lower() == "g":
-        mult = 1024**3
+        mult = 1024 ** 3
 
     if mult:
         s = s[:-1]
@@ -247,7 +253,7 @@ def parse_size(s):
     try:
         return int(s) * mult
     except ValueError:
-        raise ValueError("Invalid size specification: %s"%s)
+        raise ValueError("Invalid size specification: %s" % s)
 
 
 def safe_subn(pattern, repl, target, *args, **kwargs):

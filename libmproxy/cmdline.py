@@ -14,11 +14,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import proxy
-import re, filt
+import re
 import argparse
 
-class ParseException(Exception): pass
-class OptionException(Exception): pass
+import filt
+
+
+class ParseException(Exception):
+    pass
+
+
+class OptionException(Exception):
+    pass
+
 
 def _parse_hook(s):
     sep, rem = s[0], s[1:]
@@ -29,13 +37,13 @@ def _parse_hook(s):
     elif len(parts) == 3:
         patt, a, b = parts
     else:
-        raise ParseException("Malformed hook specifier - too few clauses: %s"%s)
+        raise ParseException("Malformed hook specifier - too few clauses: %s" % s)
 
     if not a:
-        raise ParseException("Empty clause: %s"%str(patt))
+        raise ParseException("Empty clause: %s" % str(patt))
 
     if not filt.parse(patt):
-        raise ParseException("Malformed filter pattern: %s"%patt)
+        raise ParseException("Malformed filter pattern: %s" % patt)
 
     return patt, a, b
 
@@ -70,7 +78,7 @@ def parse_replace_hook(s):
     try:
         re.compile(regex)
     except re.error, e:
-        raise ParseException("Malformed replacement regex: %s"%str(e.message))
+        raise ParseException("Malformed replacement regex: %s" % str(e.message))
     return patt, regex, replacement
 
 
@@ -126,9 +134,8 @@ def get_common_options(options):
         try:
             v = open(path, "r").read()
         except IOError, e:
-            raise OptionException("Could not read replace file: %s"%path)
+            raise OptionException("Could not read replace file: %s" % path)
         reps.append((patt, rex, v))
-
 
     setheaders = []
     for i in options.setheader:
@@ -138,33 +145,33 @@ def get_common_options(options):
             raise OptionException(e.message)
         setheaders.append(p)
 
-    return dict(
-        anticache = options.anticache,
-        anticomp = options.anticomp,
-        client_replay = options.client_replay,
-        eventlog = options.eventlog,
-        kill = options.kill,
-        no_server = options.no_server,
-        refresh_server_playback = not options.norefresh,
-        rheaders = options.rheaders,
-        rfile = options.rfile,
-        replacements = reps,
-        setheaders = setheaders,
-        server_replay = options.server_replay,
-        script = options.script,
-        stickycookie = stickycookie,
-        stickyauth = stickyauth,
-        wfile = options.wfile,
-        verbosity = options.verbose,
-        nopop = options.nopop,
-    )
+    return {
+        'anticache': options.anticache,
+        'anticomp': options.anticomp,
+        'client_replay': options.client_replay,
+        'eventlog': options.eventlog,
+        'kill': options.kill,
+        'no_server': options.no_server,
+        'refresh_server_playback': not options.norefresh,
+        'rheaders': options.rheaders,
+        'rfile': options.rfile,
+        'replacements': reps,
+        'setheaders': setheaders,
+        'server_replay': options.server_replay,
+        'script': options.script,
+        'stickycookie': stickycookie,
+        'stickyauth': stickyauth,
+        'wfile': options.wfile,
+        'verbosity': options.verbose,
+        'nopop': options.nopop,
+    }
 
 
 def common_options(parser):
     parser.add_argument(
         "-a",
-        action="store", type = str, dest="addr", default='',
-        help = "Address to bind proxy to (defaults to all interfaces)"
+        action="store", type=str, dest="addr", default='',
+        help="Address to bind proxy to (defaults to all interfaces)"
     )
     parser.add_argument(
         "--anticache",
@@ -173,8 +180,8 @@ def common_options(parser):
     )
     parser.add_argument(
         "--confdir",
-        action="store", type = str, dest="confdir", default='~/.mitmproxy',
-        help = "Configuration directory. (~/.mitmproxy)"
+        action="store", type=str, dest="confdir", default='~/.mitmproxy',
+        help="Configuration directory. (~/.mitmproxy)"
     )
     parser.add_argument(
         "-e",
@@ -188,8 +195,8 @@ def common_options(parser):
     )
     parser.add_argument(
         "-p",
-        action="store", type = int, dest="port", default=8080,
-        help = "Proxy service port."
+        action="store", type=int, dest="port", default=8080,
+        help="Proxy service port."
     )
     parser.add_argument(
         "-P",
@@ -245,7 +252,7 @@ def common_options(parser):
         "-Z",
         action="store", dest="body_size_limit", default=None,
         metavar="SIZE",
-        help="Byte size limit of HTTP request and response bodies."\
+        help="Byte size limit of HTTP request and response bodies."
              " Understands k/m/g suffixes, i.e. 3m for 3 megabytes."
     )
 
@@ -277,12 +284,12 @@ def common_options(parser):
         "--rheader",
         action="append", dest="rheaders", type=str,
         help="Request headers to be considered during replay. "
-           "Can be passed multiple times."
+             "Can be passed multiple times."
     )
     group.add_argument(
         "--norefresh",
         action="store_true", dest="norefresh", default=False,
-        help= "Disable response refresh, "
+        help="Disable response refresh, "
         "which updates times in cookies and headers for replayed responses."
     )
     group.add_argument(
@@ -313,7 +320,6 @@ def common_options(parser):
         help="Replacement pattern, where the replacement clause is a path to a file."
     )
 
-
     group = parser.add_argument_group(
         "Set Headers",
         """
@@ -328,7 +334,6 @@ def common_options(parser):
         metavar="PATTERN",
         help="Header set pattern."
     )
-
 
     group = parser.add_argument_group(
         "Proxy Authentication",

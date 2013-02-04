@@ -13,7 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, traceback
+import os
+import traceback
+
 
 class ScriptError(Exception):
     pass
@@ -40,9 +42,9 @@ class Script:
         """
         path = os.path.expanduser(self.path)
         if not os.path.exists(path):
-            raise ScriptError("No such file: %s"%self.path)
+            raise ScriptError("No such file: %s" % self.path)
         if not os.path.isfile(path):
-            raise ScriptError("Not a file: %s"%self.path)
+            raise ScriptError("Not a file: %s" % self.path)
         ns = {}
         try:
             execfile(path, ns, ns)

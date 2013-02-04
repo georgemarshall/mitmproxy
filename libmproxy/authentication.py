@@ -1,6 +1,7 @@
 import binascii
 import contrib.md5crypt as md5crypt
 
+
 class NullProxyAuth():
     """
         No proxy auth at all (returns empty challange headers)
@@ -31,6 +32,7 @@ class NullProxyAuth():
 class BasicProxyAuth(NullProxyAuth):
     CHALLENGE_HEADER = 'Proxy-Authenticate'
     AUTH_HEADER = 'Proxy-Authorization'
+
     def __init__(self, password_manager, realm):
         NullProxyAuth.__init__(self, password_manager)
         self.realm = realm
@@ -46,7 +48,7 @@ class BasicProxyAuth(NullProxyAuth):
             scheme, username, password = self.parse_auth_value(auth_value[0])
         except ValueError:
             return False
-        if scheme.lower()!='basic':
+        if scheme.lower() != 'basic':
             return False
         if not self.password_manager.test(username, password):
             return False
@@ -54,7 +56,7 @@ class BasicProxyAuth(NullProxyAuth):
         return True
 
     def auth_challenge_headers(self):
-        return {self.CHALLENGE_HEADER:'Basic realm="%s"'%self.realm}
+        return {self.CHALLENGE_HEADER: 'Basic realm="%s"' % self.realm}
 
     def unparse_auth_value(self, scheme, username, password):
         v = binascii.b2a_base64(username + ":" + password)
@@ -68,10 +70,10 @@ class BasicProxyAuth(NullProxyAuth):
         try:
             user = binascii.a2b_base64(words[1])
         except binascii.Error:
-            raise ValueError("Invalid basic auth credential: user:password pair not valid base64: %s"%words[1])
+            raise ValueError("Invalid basic auth credential: user:password pair not valid base64: %s" % words[1])
         parts = user.split(':')
         if len(parts) != 2:
-            raise ValueError("Invalid basic auth credential: decoded user:password pair not valid: %s"%user)
+            raise ValueError("Invalid basic auth credential: decoded user:password pair not valid: %s" % user)
         return scheme, parts[0], parts[1]
 
 
@@ -100,16 +102,16 @@ class HtpasswdPasswordManager(PasswordManager):
     def __init__(self, filehandle):
         PasswordManager.__init__(self)
         entries = (line.strip().split(':') for line in filehandle)
-        valid_entries = (entry for entry in entries if len(entry)==2)
-        self.usernames = {username:token for username,token in valid_entries}
+        valid_entries = (entry for entry in entries if len(entry) == 2)
+        self.usernames = {username: token for username, token in valid_entries}
 
     def test(self, username, password_token):
         if username not in self.usernames:
             return False
         full_token = self.usernames[username]
         dummy, magic, salt, hashed_password = full_token.split('$')
-        expected = md5crypt.md5crypt(password_token, salt, '$'+magic+'$')
-        return expected==full_token
+        expected = md5crypt.md5crypt(password_token, salt, '$' + magic + '$')
+        return expected == full_token
 
 
 class SingleUserPasswordManager(PasswordManager):
@@ -119,4 +121,4 @@ class SingleUserPasswordManager(PasswordManager):
         self.password = password
 
     def test(self, username, password_token):
-        return self.username==username and self.password==password_token
+        return self.username == username and self.password == password_token

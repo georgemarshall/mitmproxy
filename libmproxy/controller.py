@@ -13,9 +13,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import Queue, threading
+import Queue
+import threading
 
 should_exit = False
+
 
 class Msg:
     def __init__(self):
@@ -34,13 +36,13 @@ class Msg:
         self.acked = False
         try:
             masterq.put(self, timeout=3)
-            while not should_exit: # pragma: no cover
+            while not should_exit:  # pragma: no cover
                 try:
                     g = self.q.get(timeout=0.5)
                 except Queue.Empty:
                     continue
                 return g
-        except (Queue.Empty, Queue.Full): # pragma: no cover
+        except (Queue.Empty, Queue.Full):  # pragma: no cover
             return None
 
 
@@ -86,7 +88,7 @@ class Master:
             self.tick(self.masterq)
         self.shutdown()
 
-    def handle(self, msg): # pragma: no cover
+    def handle(self, msg):  # pragma: no cover
         c = "handle_" + msg.__class__.__name__.lower()
         m = getattr(self, c, None)
         if m:
