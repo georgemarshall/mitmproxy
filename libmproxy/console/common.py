@@ -18,9 +18,9 @@ import urwid.util
 from .. import utils, flow
 
 
-
 VIEW_FLOW_REQUEST = 0
 VIEW_FLOW_RESPONSE = 1
+KEY_MAX = 30
 
 
 def highlight_key(s, k):
@@ -34,7 +34,6 @@ def highlight_key(s, k):
     return l
 
 
-KEY_MAX = 30
 def format_keyvals(lst, key="key", val="text", indent=0):
     """
         Format a list of (key, value) tuples.
@@ -62,8 +61,8 @@ def format_keyvals(lst, key="key", val="text", indent=0):
                         urwid.Text([(key, kv[0] or "")])
                     ),
                     kv[1] if isinstance(kv[1], urwid.Widget) else urwid.Text([(val, kv[1])])
-               ])
-                ret.append(urwid.Columns(cols, dividechars = 2))
+                ])
+                ret.append(urwid.Columns(cols, dividechars=2))
     return ret
 
 
@@ -97,7 +96,6 @@ else:
     SYMBOL_RETURN = u"<-"
 
 
-
 def raw_format_flow(f, focus, extended, padding):
     f = dict(f)
 
@@ -116,7 +114,7 @@ def raw_format_flow(f, focus, extended, padding):
         req.append(fcol(SYMBOL_REPLAY, "replay"))
     req.append(fcol(f["req_method"], "method"))
 
-    preamble = sum(i[1] for i in req) + len(req) -1
+    preamble = sum(i[1] for i in req) + len(req) - 1
 
     if f["intercepting"] and not f["req_acked"]:
         uc = "intercept"
@@ -143,7 +141,7 @@ def raw_format_flow(f, focus, extended, padding):
             4: "code_400",
             5: "code_500",
         }
-        ccol = codes.get(f["resp_code"]/100, "code_other")
+        ccol = codes.get(f["resp_code"] / 100, "code_other")
         resp.append(fcol(SYMBOL_RETURN, ccol))
         if f["resp_is_replay"]:
             resp.append(fcol(SYMBOL_REPLAY, "replay"))
@@ -178,18 +176,18 @@ flowcache = FlowCache()
 
 
 def format_flow(f, focus, extended=False, padding=2):
-    d = dict(
-        intercepting = f.intercepting,
+    d = {
+        'intercepting': f.intercepting,
 
-        req_timestamp = f.request.timestamp_start,
-        req_is_replay = f.request.is_replay(),
-        req_method = f.request.method,
-        req_acked = f.request.acked,
-        req_url = f.request.get_url(),
+        'req_timestamp': f.request.timestamp_start,
+        'req_is_replay': f.request.is_replay(),
+        'req_method': f.request.method,
+        'req_acked': f.request.acked,
+        'req_url': f.request.get_url(),
 
-        err_msg = f.error.msg if f.error else None,
-        resp_code = f.response.code if f.response else None,
-    )
+        'err_msg': f.error.msg if f.error else None,
+        'resp_code': f.response.code if f.response else None,
+    }
     if f.response:
         if f.response.content:
             contentdesc = utils.pretty_size(len(f.response.content))
@@ -197,12 +195,12 @@ def format_flow(f, focus, extended=False, padding=2):
             contentdesc = "[content missing]"
         else:
             contentdesc = "[no content]"
-        d.update(dict(
-            resp_code = f.response.code,
-            resp_is_replay = f.response.is_replay(),
-            resp_acked = f.response.acked,
-            resp_clen = contentdesc
-        ))
+        d.update({
+            'resp_code': f.response.code,
+            'resp_is_replay': f.response.is_replay(),
+            'resp_acked': f.response.acked,
+            'resp_clen': contentdesc
+        })
         t = f.response.headers["content-type"]
         if t:
             d["resp_ctype"] = t[0].split(";")[0]
@@ -211,13 +209,12 @@ def format_flow(f, focus, extended=False, padding=2):
     return flowcache.format_flow(tuple(sorted(d.items())), focus, extended, padding)
 
 
-
 def int_version(v):
     SIG = 3
     v = urwid.__version__.split("-")[0].split(".")
     x = 0
     for i in range(min(SIG, len(v))):
-        x += int(v[i]) * 10**(SIG-i)
+        x += int(v[i]) * 10 ** (SIG - i)
     return x
 
 
@@ -227,8 +224,7 @@ class WWrap(urwid.WidgetWrap):
     if int_version(urwid.__version__) >= 990:
         def set_w(self, x):
             self._w = x
+
         def get_w(self):
             return self._w
         w = property(get_w, set_w)
-
-

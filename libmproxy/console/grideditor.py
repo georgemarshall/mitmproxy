@@ -13,7 +13,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import copy, re, os
+import copy
+import re
+import os
 import urwid
 import common
 from .. import utils, filt
@@ -86,7 +88,7 @@ class GridRow(common.WWrap):
             fspecs[0] = ("fixed", self.editor.first_width + 2, fspecs[0])
         w = urwid.Columns(
             fspecs,
-            dividechars = 2
+            dividechars=2
         )
         if focused is not None:
             w.set_focus_column(focused)
@@ -151,12 +153,12 @@ class GridWalker(urwid.ListWalker):
     def delete_focus(self):
         if self.lst:
             del self.lst[self.focus]
-            self.focus = min(len(self.lst)-1, self.focus)
+            self.focus = min(len(self.lst) - 1, self.focus)
             self._modified()
 
     def _insert(self, pos):
         self.focus = pos
-        self.lst.insert(self.focus, [[""]*self.editor.columns, set([])])
+        self.lst.insert(self.focus, [[""] * self.editor.columns, set([])])
         self.focus_col = 0
         self.start_edit()
 
@@ -184,14 +186,14 @@ class GridWalker(urwid.ListWalker):
         self._modified()
 
     def right(self):
-        self.focus_col = min(self.focus_col + 1, self.editor.columns-1)
+        self.focus_col = min(self.focus_col + 1, self.editor.columns - 1)
         self._modified()
 
     def tab_next(self):
         self.stop_edit()
-        if self.focus_col < self.editor.columns-1:
+        if self.focus_col < self.editor.columns - 1:
             self.focus_col += 1
-        elif self.focus != len(self.lst)-1:
+        elif self.focus != len(self.lst) - 1:
             self.focus_col = 0
             self.focus += 1
         self._modified()
@@ -209,14 +211,14 @@ class GridWalker(urwid.ListWalker):
         self.focus = focus
 
     def get_next(self, pos):
-        if pos+1 >= len(self.lst):
+        if pos + 1 >= len(self.lst):
             return None, None
-        return GridRow(None, False, self.editor, self.lst[pos+1]), pos+1
+        return GridRow(None, False, self.editor, self.lst[pos + 1]), pos + 1
 
     def get_prev(self, pos):
-        if pos-1 < 0:
+        if pos - 1 < 0:
             return None, None
-        return GridRow(None, False, self.editor, self.lst[pos-1]), pos-1
+        return GridRow(None, False, self.editor, self.lst[pos - 1]), pos - 1
 
 
 class GridListBox(urwid.ListBox):
@@ -226,10 +228,13 @@ class GridListBox(urwid.ListBox):
 
 FIRST_WIDTH_MAX = 40
 FIRST_WIDTH_MIN = 20
+
+
 class GridEditor(common.WWrap):
     title = None
     columns = None
     headings = None
+
     def __init__(self, master, value, callback, *cb_args, **cb_kwargs):
         value = copy.deepcopy(value)
         self.master, self.value, self.callback = master, value, callback
@@ -255,7 +260,7 @@ class GridEditor(common.WWrap):
                 headings.append(c)
         h = urwid.Columns(
             headings,
-            dividechars = 2
+            dividechars=2
         )
         h = urwid.AttrWrap(h, "heading")
 
@@ -263,7 +268,7 @@ class GridEditor(common.WWrap):
         self.lb = GridListBox(self.walker)
         self.w = urwid.Frame(
             self.lb,
-            header = urwid.Pile([title, h])
+            header=urwid.Pile([title, h])
         )
         self.master.statusbar.update("")
         self.show_empty_msg()
@@ -395,6 +400,7 @@ class HeaderEditor(GridEditor):
     title = "Editing headers"
     columns = 2
     headings = ("Key", "Value")
+
     def make_help(self):
         h = GridEditor.make_help(self)
         text = []
@@ -437,6 +443,7 @@ class ReplaceEditor(GridEditor):
     title = "Editing replacement patterns"
     columns = 3
     headings = ("Filter", "Regex", "Replacement")
+
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):
@@ -453,6 +460,7 @@ class SetHeadersEditor(GridEditor):
     title = "Editing header set patterns"
     columns = 3
     headings = ("Filter", "Header", "Value")
+
     def is_error(self, col, val):
         if col == 0:
             if not filt.parse(val):

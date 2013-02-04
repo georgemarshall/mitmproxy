@@ -20,6 +20,7 @@ footer = [
     ('heading_key', "q"), ":back ",
 ]
 
+
 class FlowDetailsView(urwid.ListBox):
     def __init__(self, master, flow, state):
         self.master, self.flow, self.state = master, flow, state
@@ -53,7 +54,7 @@ class FlowDetailsView(urwid.ListBox):
             if c:
                 text.append(urwid.Text([("head", "Server Certificate:")]))
                 parts = [
-                    ["Type", "%s, %s bits"%c.keyinfo],
+                    ["Type", "%s, %s bits" % c.keyinfo],
                     ["SHA1 digest", c.digest("sha1")],
                     ["Valid to", str(c.notafter)],
                     ["Valid from", str(c.notbefore)],
@@ -93,9 +94,9 @@ class FlowDetailsView(urwid.ListBox):
             text.append(urwid.Text([("head", "Client Connection:")]))
             cc = self.flow.request.client_conn
             parts = [
-                ["Address", "%s:%s"%tuple(cc.address)],
-                ["Requests", "%s"%cc.requestcount],
-                ["Closed", "%s"%cc.close],
+                ["Address", "%s:%s" % tuple(cc.address)],
+                ["Requests", "%s" % cc.requestcount],
+                ["Closed", "%s" % cc.close],
             ]
             text.extend(common.format_keyvals(parts, key="key", val="text", indent=4))
 

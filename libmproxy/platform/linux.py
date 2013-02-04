@@ -1,7 +1,9 @@
-import socket, struct, fcntl
+import socket
+import struct
 
 # Python socket module does not have this constant
 SO_ORIGINAL_DST = 80
+
 
 class Resolver:
     def original_addr(self, csock):

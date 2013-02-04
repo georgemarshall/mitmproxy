@@ -13,10 +13,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os, sys
+import os
+import sys
 import urwid
-import common, grideditor, contentview
+import common
+import grideditor
+import contentview
 from .. import utils, flow
+
 
 def _mkhelp():
     text = []
@@ -29,38 +33,38 @@ def _mkhelp():
         ("e", "edit request/response"),
         ("f", "load full body data"),
         ("m", "change body display mode for this entity"),
-            (None,
-                common.highlight_key("automatic", "a") +
-                [("text", ": automatic detection")]
-            ),
-            (None,
-                common.highlight_key("hex", "h") +
-                [("text", ": Hex")]
-            ),
-            (None,
-                common.highlight_key("image", "i") +
-                [("text", ": Image")]
-            ),
-            (None,
-                common.highlight_key("javascript", "j") +
-                [("text", ": JavaScript")]
-            ),
-            (None,
-                common.highlight_key("json", "s") +
-                [("text", ": JSON")]
-            ),
-            (None,
-                common.highlight_key("urlencoded", "u") +
-                [("text", ": URL-encoded data")]
-            ),
-            (None,
-                common.highlight_key("raw", "r") +
-                [("text", ": raw data")]
-            ),
-            (None,
-                common.highlight_key("xml", "x") +
-                [("text", ": XML")]
-            ),
+        (None,
+            common.highlight_key("automatic", "a") +
+            [("text", ": automatic detection")]
+        ),
+        (None,
+            common.highlight_key("hex", "h") +
+            [("text", ": Hex")]
+        ),
+        (None,
+            common.highlight_key("image", "i") +
+            [("text", ": Image")]
+        ),
+        (None,
+            common.highlight_key("javascript", "j") +
+            [("text", ": JavaScript")]
+        ),
+        (None,
+            common.highlight_key("json", "s") +
+            [("text", ": JSON")]
+        ),
+        (None,
+            common.highlight_key("urlencoded", "u") +
+            [("text", ": URL-encoded data")]
+        ),
+        (None,
+            common.highlight_key("raw", "r") +
+            [("text", ": raw data")]
+        ),
+        (None,
+            common.highlight_key("xml", "x") +
+            [("text", ": XML")]
+        ),
         ("M", "change default body display mode"),
         ("p", "previous flow"),
         ("r", "replay request"),
@@ -120,6 +124,7 @@ class FlowView(common.WWrap):
         ("options", "o"),
         ("edit raw", "e"),
     ]
+
     def __init__(self, master, state, flow):
         self.master, self.state, self.flow = master, state, flow
         if self.state.view_flow_mode == common.VIEW_FLOW_RESPONSE:
@@ -141,19 +146,19 @@ class FlowView(common.WWrap):
         else:
             limit = contentview.VIEW_CUTOFF
         return cache.callback(
-                    self, "_cached_content_view",
-                    viewmode,
-                    tuple(tuple(i) for i in conn.headers.lst),
-                    conn.content,
-                    limit
-                )
+            self, "_cached_content_view",
+            viewmode,
+            tuple(tuple(i) for i in conn.headers.lst),
+            conn.content,
+            limit
+        )
 
     def conn_text(self, conn):
         txt = common.format_keyvals(
-                [(h+":", v) for (h, v) in conn.headers.lst],
-                key = "header",
-                val = "text"
-            )
+            [(h + ":", v) for (h, v) in conn.headers.lst],
+            key="header",
+            val="text"
+        )
         if conn.content is not None:
             override = self.state.get_flow_setting(
                 self.flow,
@@ -180,7 +185,7 @@ class FlowView(common.WWrap):
                             " ",
                             ('heading', "["),
                             ('heading_key', "m"),
-                            ('heading', (":%s]"%viewmode.name)),
+                            ('heading', (":%s]" % viewmode.name)),
                         ],
                         align="right"
                     )
@@ -221,9 +226,9 @@ class FlowView(common.WWrap):
 
         h = urwid.Columns(parts)
         f = urwid.Frame(
-                    body,
-                    header=h
-                )
+            body,
+            header=h
+        )
         return f
 
     def view_request(self):
@@ -302,7 +307,7 @@ class FlowView(common.WWrap):
         except ValueError:
             return None
         import BaseHTTPServer
-        if BaseHTTPServer.BaseHTTPRequestHandler.responses.has_key(int(code)):
+        if int(code) in BaseHTTPServer.BaseHTTPRequestHandler.responses:
             response.msg = BaseHTTPServer.BaseHTTPRequestHandler.responses[int(code)][0]
         self.master.refresh_flow(self.flow)
 
@@ -343,7 +348,7 @@ class FlowView(common.WWrap):
         self.flow.backup()
         if part == "r":
             c = self.master.spawn_editor(conn.content or "")
-            conn.content = c.rstrip("\n") # what?
+            conn.content = c.rstrip("\n")  # what?
         elif part == "f":
             if not conn.get_form_urlencoded() and conn.content:
                 self.master.prompt_onekey(
@@ -459,7 +464,7 @@ class FlowView(common.WWrap):
         elif key == "d":
             if self.state.flow_count() == 1:
                 self.master.view_flowlist()
-            elif self.state.view.index(self.flow) == len(self.state.view)-1:
+            elif self.state.view.index(self.flow) == len(self.state.view) - 1:
                 self.view_prev_flow(self.flow)
             else:
                 self.view_next_flow(self.flow)
@@ -542,7 +547,7 @@ class FlowView(common.WWrap):
             if conn and conn.content:
                 t = conn.headers["content-type"] or [None]
                 t = t[0]
-                if os.environ.has_key("EDITOR") or os.environ.has_key("PAGER"):
+                if "EDITOR" in os.environ or "PAGER" in os.environ:
                     self.master.spawn_external_viewer(conn.content, t)
                 else:
                     self.master.statusbar.message("Error! Set $EDITOR or $PAGER.")

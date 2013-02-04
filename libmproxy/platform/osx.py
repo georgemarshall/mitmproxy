@@ -9,8 +9,10 @@ import pf
     simple, and works.
 """
 
+
 class Resolver:
     STATECMD = ("sudo", "-n", "/sbin/pfctl", "-s", "state")
+
     def __init__(self):
         pass
 

@@ -16,6 +16,7 @@
 import urwid
 import common
 
+
 def _mkhelp():
     text = []
     keys = [
@@ -45,6 +46,7 @@ footer = [
     ('heading_key', "?"), ":help ",
 ]
 
+
 class EventListBox(urwid.ListBox):
     def __init__(self, master):
         self.master = master
@@ -70,14 +72,14 @@ class BodyPile(urwid.Pile):
             self,
             [
                 FlowListBox(master),
-                urwid.Frame(EventListBox(master), header = self.inactive_header)
+                urwid.Frame(EventListBox(master), header=self.inactive_header)
             ]
         )
         self.master = master
 
     def keypress(self, size, key):
         if key == "tab":
-            self.focus_position = (self.focus_position + 1)%len(self.widget_list)
+            self.focus_position = (self.focus_position + 1) % len(self.widget_list)
             if self.focus_position == 1:
                 self.widget_list[1].header = self.active_header
             else:
@@ -90,11 +92,11 @@ class BodyPile(urwid.Pile):
         # This is essentially a copypasta from urwid.Pile's keypress handler.
         # So much for "closed for modification, but open for extension".
         item_rows = None
-        if len(size)==2:
-            item_rows = self.get_item_rows( size, focus=True )
+        if len(size) == 2:
+            item_rows = self.get_item_rows(size, focus=True)
         i = self.widget_list.index(self.focus_item)
-        tsize = self.get_item_size(size,i,True,item_rows)
-        return self.focus_item.keypress( tsize, key )
+        tsize = self.get_item_size(size, i, True, item_rows)
+        return self.focus_item.keypress(tsize, key)
 
 
 class ConnectionItem(common.WWrap):
