@@ -370,19 +370,19 @@ class Request(HTTPMsg):
         self.timestamp_end = state["timestamp_end"]
 
     def _get_state(self):
-        return dict(
-            client_conn=self.client_conn._get_state() if self.client_conn else None,
-            httpversion=self.httpversion,
-            host=self.host,
-            port=self.port,
-            scheme=self.scheme,
-            method=self.method,
-            path=self.path,
-            headers=self.headers._get_state(),
-            content=self.content,
-            timestamp_start=self.timestamp_start,
-            timestamp_end=self.timestamp_end
-        )
+        return {
+            'client_conn': self.client_conn._get_state() if self.client_conn else None,
+            'httpversion': self.httpversion,
+            'host': self.host,
+            'port': self.port,
+            'scheme': self.scheme,
+            'method': self.method,
+            'path': self.path,
+            'headers': self.headers._get_state(),
+            'content': self.content,
+            'timestamp_start': self.timestamp_start,
+            'timestamp_end': self.timestamp_end
+        }
 
     @classmethod
     def _from_state(klass, state):
@@ -557,7 +557,7 @@ class Request(HTTPMsg):
                 str(headers)
             )
 
-    def _assemble(self, _proxy = False):
+    def _assemble(self, _proxy=False):
         """
             Assembles the request for transmission to the server. We make some
             modifications to make sure interception works properly.
@@ -690,16 +690,16 @@ class Response(HTTPMsg):
         self.cert = certutils.SSLCert.from_pem(state["cert"]) if state["cert"] else None
 
     def _get_state(self):
-        return dict(
-            httpversion=self.httpversion,
-            code=self.code,
-            msg=self.msg,
-            headers=self.headers._get_state(),
-            timestamp_start=self.timestamp_start,
-            timestamp_end=self.timestamp_end,
-            cert=self.cert.to_pem() if self.cert else None,
-            content=self.content,
-        )
+        return {
+            'httpversion': self.httpversion,
+            'code': self.code,
+            'msg': self.msg,
+            'headers': self.headers._get_state(),
+            'timestamp_start': self.timestamp_start,
+            'timestamp_end': self.timestamp_end,
+            'cert': self.cert.to_pem() if self.cert else None,
+            'content': self.content,
+        }
 
     @classmethod
     def _from_state(klass, request, state):
@@ -736,9 +736,9 @@ class Response(HTTPMsg):
         )
         if self.content:
             headers["content-length"] = [str(len(self.content))]
-        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
+        proto = "HTTP/%s.%s %s %s" % (self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
         data = (proto, str(headers))
-        return FMT%data
+        return FMT % data
 
     def _assemble(self):
         """
@@ -834,11 +834,11 @@ class ClientConnect(controller.Msg):
         self.requestcount = state["requestcount"]
 
     def _get_state(self):
-        return dict(
-            address=list(self.address),
-            requestcount=self.requestcount,
-            error=self.error,
-        )
+        return {
+            'address': list(self.address),
+            'requestcount': self.requestcount,
+            'error': self.error,
+        }
 
     @classmethod
     def _from_state(klass, state):
@@ -891,10 +891,10 @@ class Error(controller.Msg):
         return c
 
     def _get_state(self):
-        return dict(
-            msg=self.msg,
-            timestamp=self.timestamp,
-        )
+        return {
+            'msg': self.msg,
+            'timestamp': self.timestamp,
+        }
 
     @classmethod
     def _from_state(klass, request, state):
@@ -1117,12 +1117,12 @@ class Flow:
         return f
 
     def _get_state(self):
-        return dict(
-            request=self.request._get_state() if self.request else None,
-            response=self.response._get_state() if self.response else None,
-            error=self.error._get_state() if self.error else None,
-            version=version.IVERSION
-        )
+        return {
+            'request': self.request._get_state() if self.request else None,
+            'response': self.response._get_state() if self.response else None,
+            'error': self.error._get_state() if self.error else None,
+            'version': version.IVERSION
+        }
 
     def _load_state(self, state):
         if self.request:
