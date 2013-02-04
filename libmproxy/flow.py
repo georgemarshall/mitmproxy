@@ -17,12 +17,26 @@
     This module provides more sophisticated flow tracking. These match requests
     with their responses, and provide filtering and interception facilities.
 """
-import hashlib, Cookie, cookielib, copy, re, urlparse, os
-import time, urllib
-import tnetstring, filt, script, utils, encoding, proxy
+import hashlib
+import Cookie
+import cookielib
+import copy
+import re
+import urlparse
+import time
+import urllib
 from email.utils import parsedate_tz, formatdate, mktime_tz
+
 from netlib import odict, http, certutils
-import controller, version
+
+import tnetstring
+import filt
+import script
+import utils
+import encoding
+import proxy
+import controller
+import version
 
 HDR_FORM_URLENCODED = "application/x-www-form-urlencoded"
 CONTENT_MISSING = 0
@@ -252,6 +266,7 @@ class HTTPMsg(controller.Msg):
             return 0
         return len(self.content)
 
+
 class Request(HTTPMsg):
     """
         An HTTP request.
@@ -356,17 +371,17 @@ class Request(HTTPMsg):
 
     def _get_state(self):
         return dict(
-            client_conn = self.client_conn._get_state() if self.client_conn else None,
-            httpversion = self.httpversion,
-            host = self.host,
-            port = self.port,
-            scheme = self.scheme,
-            method = self.method,
-            path = self.path,
-            headers = self.headers._get_state(),
-            content = self.content,
-            timestamp_start = self.timestamp_start,
-            timestamp_end = self.timestamp_end
+            client_conn=self.client_conn._get_state() if self.client_conn else None,
+            httpversion=self.httpversion,
+            host=self.host,
+            port=self.port,
+            scheme=self.scheme,
+            method=self.method,
+            path=self.path,
+            headers=self.headers._get_state(),
+            content=self.content,
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end
         )
 
     @classmethod
@@ -485,18 +500,18 @@ class Request(HTTPMsg):
         cookies = []
         for header in cookie_headers:
             pairs = [pair.partition("=") for pair in header.split(';')]
-            cookies.extend((pair[0],(pair[2],{})) for pair in pairs)
+            cookies.extend((pair[0], (pair[2], {})) for pair in pairs)
         return dict(cookies)
 
     def get_header_size(self):
         FMT = '%s %s HTTP/%s.%s\r\n%s\r\n'
         assembled_header = FMT % (
-                self.method,
-                self.path,
-                self.httpversion[0],
-                self.httpversion[1],
-                str(self.headers)
-            )
+            self.method,
+            self.path,
+            self.httpversion[0],
+            self.httpversion[1],
+            str(self.headers)
+        )
         return len(assembled_header)
 
     def _assemble_head(self, proxy=False):
@@ -676,14 +691,14 @@ class Response(HTTPMsg):
 
     def _get_state(self):
         return dict(
-            httpversion = self.httpversion,
-            code = self.code,
-            msg = self.msg,
-            headers = self.headers._get_state(),
-            timestamp_start = self.timestamp_start,
-            timestamp_end = self.timestamp_end,
-            cert = self.cert.to_pem() if self.cert else None,
-            content = self.content,
+            httpversion=self.httpversion,
+            code=self.code,
+            msg=self.msg,
+            headers=self.headers._get_state(),
+            timestamp_start=self.timestamp_start,
+            timestamp_end=self.timestamp_end,
+            cert=self.cert.to_pem() if self.cert else None,
+            content=self.content,
         )
 
     @classmethod
@@ -755,7 +770,7 @@ class Response(HTTPMsg):
 
     def get_header_size(self):
         FMT = '%s\r\n%s\r\n'
-        proto = "HTTP/%s.%s %s %s"%(self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
+        proto = "HTTP/%s.%s %s %s" % (self.httpversion[0], self.httpversion[1], self.code, str(self.msg))
         assembled_header = FMT % (proto, str(self.headers))
         return len(assembled_header)
 
@@ -767,11 +782,12 @@ class Response(HTTPMsg):
         cookies = []
         for header in cookie_headers:
             pairs = [pair.partition("=") for pair in header.split(';')]
-            cookie_name = pairs[0][0] # the key of the first key/value pairs
-            cookie_value = pairs[0][2] # the value of the first key/value pairs
-            cookie_parameters = {key.strip().lower():value.strip() for key,sep,value in pairs[1:]}
+            cookie_name = pairs[0][0]  # the key of the first key/value pairs
+            cookie_value = pairs[0][2]  # the value of the first key/value pairs
+            cookie_parameters = {key.strip().lower(): value.strip() for key, sep, value in pairs[1:]}
             cookies.append((cookie_name, (cookie_value, cookie_parameters)))
         return dict(cookies)
+
 
 class ClientDisconnect(controller.Msg):
     """
@@ -819,9 +835,9 @@ class ClientConnect(controller.Msg):
 
     def _get_state(self):
         return dict(
-            address = list(self.address),
-            requestcount = self.requestcount,
-            error = self.error,
+            address=list(self.address),
+            requestcount=self.requestcount,
+            error=self.error,
         )
 
     @classmethod
@@ -876,8 +892,8 @@ class Error(controller.Msg):
 
     def _get_state(self):
         return dict(
-            msg = self.msg,
-            timestamp = self.timestamp,
+            msg=self.msg,
+            timestamp=self.timestamp,
         )
 
     @classmethod
@@ -933,7 +949,7 @@ class ClientPlaybackState:
             n.request.client_conn = None
             self.current = master.handle_request(n.request)
             if not testing and not self.current.response:
-                master.replay_request(self.current) # pragma: no cover
+                master.replay_request(self.current)  # pragma: no cover
             elif self.current.response:
                 master.handle_response(self.current.response)
 
@@ -991,7 +1007,6 @@ class ServerPlaybackState:
             return l[0]
         else:
             return l.pop(0)
-
 
 
 class StickyCookieState:
@@ -1102,13 +1117,12 @@ class Flow:
         return f
 
     def _get_state(self):
-        d = dict(
-            request = self.request._get_state() if self.request else None,
-            response = self.response._get_state() if self.response else None,
-            error = self.error._get_state() if self.error else None,
-            version = version.IVERSION
+        return dict(
+            request=self.request._get_state() if self.request else None,
+            response=self.response._get_state() if self.response else None,
+            error=self.error._get_state() if self.error else None,
+            version=version.IVERSION
         )
-        return d
 
     def _load_state(self, state):
         if self.request:
@@ -1544,11 +1558,11 @@ class FlowMaster(controller.Master):
             f.error = None
             self.process_new_request(f)
             rt = proxy.RequestReplayThread(
-                    self.server.config,
-                    f,
-                    self.masterq,
-                )
-            rt.start() # pragma: no cover
+                self.server.config,
+                f,
+                self.masterq,
+            )
+            rt.start()  # pragma: no cover
             if block:
                 rt.join()
 
@@ -1617,7 +1631,6 @@ class FlowMaster(controller.Master):
         self.stream = None
 
 
-
 class FlowWriter:
     def __init__(self, fo):
         self.fo = fo
@@ -1647,12 +1660,11 @@ class FlowReader:
                 data = tnetstring.load(self.fo)
                 if tuple(data["version"]) != version.IVERSION:
                     v = ".".join(str(i) for i in data["version"])
-                    raise FlowReadError("Incompatible serialized data version: %s"%v)
+                    raise FlowReadError("Incompatible serialized data version: %s" % v)
                 off = self.fo.tell()
                 yield Flow._from_state(data)
-        except ValueError, v:
+        except ValueError:
             # Error is due to EOF
             if self.fo.tell() == off and self.fo.read() == '':
                 return
             raise FlowReadError("Invalid data format.")
-
