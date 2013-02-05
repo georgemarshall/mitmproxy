@@ -123,6 +123,7 @@ class ProxTestBase:
 class HTTPProxTest(ProxTestBase):
     ssl = None
     clientcerts = False
+
     @classmethod
     def get_proxy_config(cls):
         d = dict()
@@ -130,9 +131,9 @@ class HTTPProxTest(ProxTestBase):
             d["clientcerts"] = test_data.path("data/clientcert")
         return d
 
-    def pathoc(self, connect_to = None):
+    def pathoc(self):
         p = libpathod.pathoc.Pathoc("localhost", self.proxy.port)
-        p.connect(connect_to)
+        p.connect()
         return p
 
     def pathod(self, spec):
